@@ -35,6 +35,9 @@ ecommerce-visualization
 2. 安装依赖：
    ```
    pip install -r requirements.txt
+   python -m venv .venv
+   .\.venv\Scripts\activate
+   pip install -r requirements.txt
    ```
 
 3. 启动应用：
@@ -45,9 +48,11 @@ ecommerce-visualization
 4. 在浏览器中访问 `http://127.0.0.1:5000` 查看可视化大屏。
 
 ## 使用说明
-- 确保Hive数据库已正确配置并可访问。
-- 根据需要修改 `src/data/hive_query.py` 中的查询逻辑，以提取所需的数据。
-- 可以在 `src/templates/dashboard.html` 中自定义ECharts图表的展示样式和数据。
+ **Hive数据库配置**：确保Hive数据库已正确配置并可访问，且`hive_query.py`中的连接参数（如host、port、username、database等）已根据实际情况修改。
+- **自定义查询**：如需展示不同的数据，可修改 `src/data/hive_query.py` 中的SQL查询逻辑，返回你需要的字段和数据格式。
+- **前端自定义**：可在 `src/templates/dashboard.html` 中自定义ECharts图表的展示样式和数据绑定方式，实现不同的可视化效果。
+- **静态资源**：如需使用本地ECharts库，请将 `echarts.min.js` 放在 `src/static/js/` 目录下，并在模板中正确引用。
+- **依赖管理**：如需添加新依赖，建议在虚拟环境下安装，并及时更新 `requirements.txt`.
 
 ## 贡献
 欢迎任何形式的贡献！请提交问题或拉取请求。
