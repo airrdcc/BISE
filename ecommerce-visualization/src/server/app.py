@@ -9,7 +9,7 @@ app = Flask(__name__, template_folder='../templates')
 
 @app.route('/')
 def dashboard():
-    data = get_data()
+    data = get_data()  # 获取数据
     return render_template('dashboard.html', data=data)
 
 @app.route('/api/data')

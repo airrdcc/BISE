@@ -2,68 +2,133 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>电商可视化大屏</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <!-- 引入 ECharts 地图扩展和中国地图数据 -->
+    <script src="https://cdn.jsdelivr.net/npm/chinese-js@1.0.1/index.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            display: flex; /* 使用 Flexbox 布局 */
+            height: 100vh; /* 使容器占满整个视口高度 */
+            overflow: hidden; /* 防止整体滚动条 */
         }
-        #main {
+        .panel {
+            flex: 1; /* 使面板弹性伸缩 */
+            border: 1px solid #ccc; /* 添加边框以便区分 */
+            box-sizing: border-box; /* 边框不计入宽度 */
+            display: flex; /* 使面板内部也使用 Flexbox */
+            flex-direction: column; /* 内部元素垂直排列 */
+            padding: 10px; /* 添加内边距 */
+        }
+        #left-panel, #right-panel {
+            flex: 0 0 20%; /* 左侧和右侧固定宽度20% */
+        }
+        #center-panel {
+            flex: 1; /* 中间弹性伸缩，占据剩余空间 */
+        }
+        .top-area, .bottom-area {
+            flex: 1; /* 使上下区域弹性伸缩，平分父容器高度 */
+            border: 1px solid #eee; /* 添加内部边框 */
+            margin-bottom: 10px; /* 上下区域之间留白 */
+            padding: 5px; /* 添加内边距 */
+            overflow: auto; /* 内容溢出时显示滚动条 */
+        }
+        .bottom-area {
+             margin-bottom: 0; /* 最后一个区域底部不留白 */
+        }
+        /* 地图容器样式 */
+        #china-map-container {
             width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        #chart {
-            width: 80%;
-            height: 80%;
+            flex: 1; /* 占满中间面板的剩余空间 */
         }
     </style>
 </head>
 <body>
-    <div id="main">
-        <h1>电商数据可视化</h1>
-        <div id="chart"></div>
+    <!-- 左侧面板 -->
+    <div id="left-panel" class="panel">
+        <div class="top-area">
+            <h2>左上区域</h2>
+            <!-- 在这里放置左上组件 -->
+        </div>
+        <div class="bottom-area">
+            <h2>左下区域</h2>
+            <!-- 在这里放置左下组件 -->
+        </div>
     </div>
-    <script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+
+    <!-- 中间面板 -->
+    <div id="center-panel" class="panel">
+        <h2>中间区域 - 中国地图</h2>
+        <!-- ECharts 地图容器 -->
+        <div id="china-map-container"></div>
+        <!-- 在这里放置中间其他组件 -->
+    </div>
+
+    <!-- 右侧面板 -->
+    <div id="right-panel" class="panel">
+        <div class="top-area">
+            <h2>右上区域</h2>
+            <!-- 在这里放置右上组件 -->
+        </div>
+        <div class="bottom-area">
+            <h2>右下区域</h2>
+            <!-- 在这里放置右下组件 -->
+        </div>
+    </div>
+
     <script>
-        var myChart = echarts.init(document.getElementById('chart'));
+        // 初始化地图图表
+        var chinaMapChart = echarts.init(document.getElementById('china-map-container'));
 
-        var option = {
-            title: {
-                text: '电商销售数据'
-            },
-            tooltip: {},
-            legend: {
-                data: ['销售额']
-            },
-            xAxis: {
-                data: []
-            },
-            yAxis: {},
-            series: [{
-                name: '销售额',
-                type: 'bar',
-                data: []
-            }]
-        };
-
-        myChart.setOption(option);
-
-        fetch('/api/data')
+        // 从后端获取数据
+        fetch('/api/data') // 假设 /api/data 返回地图所需数据
             .then(response => response.json())
             .then(data => {
-                option.xAxis.data = data.categories;
-                option.series[0].data = data.values;
-                myChart.setOption(option);
+                // 假设后端返回的数据格式为 { mapData: [{ name: '省份名称', value: 销售额 }, ...] }
+                var mapOption = {
+                    title: {
+                        text: '中国各省销售额',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{b}<br/>销售额: {c}' // b是省份名称，c是数值
+                    },
+                    visualMap: { // 颜色映射，根据数值深浅
+                        min: 0,
+                        max: 500000, // 请根据你的实际销售额范围调整最大值
+                        left: 'left',
+                        top: 'bottom',
+                        text: ['高','低'], // 文本，默认为数值文本
+                        calculable: true
+                    },
+                    series: [
+                        {
+                            name: '销售额',
+                            type: 'map',
+                            map: 'china', // 使用已注册的 'china' 地图
+                            roam: true, // 允许缩放和平移
+                            label: {
+                                show: true // 显示省份名称
+                            },
+                            data: data.mapData // 绑定数据
+                        }
+                    ]
+                };
+                // 使用配置显示图表
+                chinaMapChart.setOption(mapOption);
             })
-            .catch(error => console.error('Error fetching data:', error));
+            .catch(error => {
+                console.error('获取数据失败:', error);
+            });
+
+        // 当窗口大小改变时，重新调整图表大小
+        window.addEventListener('resize', function() {
+            chinaMapChart.resize();
+        });
     </script>
 </body>
 </html>
